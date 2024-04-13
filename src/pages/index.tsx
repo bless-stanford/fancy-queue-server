@@ -29,7 +29,7 @@ export default function IndexPage() {
     </Stack>
   );
 
-  const renderAuth = (
+  const renderNewUser = (
     <Stack spacing={1}>
       <Typography variant="h6" sx={{ fontWeight: 'fontWeightBold' }}>
         New User
@@ -55,7 +55,7 @@ export default function IndexPage() {
 
         <Divider sx={{ borderStyle: 'dashed' }} />
 
-        {renderAuth}
+        {renderNewUser}
       </Stack>
     </Container>
   );
