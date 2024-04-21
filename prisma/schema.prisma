@@ -25,6 +25,7 @@ model User {
   zipCode      String?
   about        String?
   perms        Permission[]
+  requests     Request[]
 }
 
 model Course {
@@ -37,5 +38,18 @@ model Permission {
   course       Course     @relation(fields: [courseId], references: [id])
   courseId     String
   recipients   User       @relation(fields: [userId], references: [id])
+  userId       String
+}
+
+model Queue {
+  id           String     @id @unique
+  requests     Request[]
+}
+
+model Request {
+  id           String     @id @unique
+  queue        Queue      @relation(fields: [queueId], references: [id])
+  queueId      String
+  users        User       @relation(fields: [userId], references: [id])
   userId       String
 }
