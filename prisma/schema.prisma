@@ -24,4 +24,18 @@ model User {
   city         String?
   zipCode      String?
   about        String?
+  perms        Permission[]
+}
+
+model Course {
+  id           String     @id @unique
+  perms        Permission[]
+}
+
+model Permission {
+  id           String     @id @unique
+  course       Course     @relation(fields: [courseId], references: [id])
+  courseId     String
+  recipients   User       @relation(fields: [userId], references: [id])
+  userId       String
 }
