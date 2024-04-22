@@ -26,10 +26,14 @@ model User {
   about        String?
   perms        Permission[]
   requests     Request[]
+  queuesOwned  Queue[]
 }
 
 model Course {
   id           String     @id @unique
+  name         String
+  year         String
+  term         String
   perms        Permission[]
 }
 
@@ -43,11 +47,18 @@ model Permission {
 
 model Queue {
   id           String     @id @unique
+  active       Boolean
+  name         String?
+  owner        User       @relation(fields: [ownerId], references: [id])
+  ownerId      String
+  studentId    String
   requests     Request[]
 }
 
 model Request {
   id           String     @id @unique
+  info         String?
+  problemType  Int?
   queue        Queue      @relation(fields: [queueId], references: [id])
   queueId      String
   users        User       @relation(fields: [userId], references: [id])
