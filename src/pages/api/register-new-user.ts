@@ -8,8 +8,12 @@ async function registerNewUser(req: NextApiRequest, res: NextApiResponse) {
     const { userId, data } = req.body;
     const { email, displayName } = data;
 
-    const user = await prisma.user.create({
-      data: {
+    const user = await prisma.user.upsert({
+      where: {
+        email
+      },
+      update: {},
+      create: {
         id: userId,
         email,
         displayName,

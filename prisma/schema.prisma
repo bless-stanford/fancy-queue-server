@@ -30,7 +30,7 @@ model User {
 }
 
 model Course {
-  id           String     @id @unique
+  id           String     @id @unique @default(uuid())
   name         String
   year         String
   term         String
@@ -38,11 +38,12 @@ model Course {
 }
 
 model Permission {
-  id           String     @id @unique
+  id           String     @id @unique @default(uuid())
   course       Course     @relation(fields: [courseId], references: [id])
   courseId     String
-  recipients   User       @relation(fields: [userId], references: [id])
+  recipient    User       @relation(fields: [userId], references: [id])
   userId       String
+  role         Role       @default(STUDENT)
 }
 
 model Queue {
@@ -63,4 +64,10 @@ model Request {
   queueId      String
   users        User       @relation(fields: [userId], references: [id])
   userId       String
+}
+
+enum Role {
+  ADMIN
+  TA
+  STUDENT
 }
