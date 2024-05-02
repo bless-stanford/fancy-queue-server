@@ -3,12 +3,12 @@ import { prisma } from 'lib/prisma';
 // utils
 import cors from 'src/utils/cors';
 
-async function createCourse(req: NextApiRequest, res: NextApiResponse) {
+async function createQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { userId, data } = req.body;
-    const { className, year, session } = data;
+    const { courseId, name } = data;
 
-    const course = await prisma.course.create({
+    const course = await prisma.queue.create({
       data: {
         name: className,
         year,
