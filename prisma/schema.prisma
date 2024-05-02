@@ -14,53 +14,59 @@ datasource db {
 }
 
 model User {
-  id           String     @id @unique
-  email        String     @unique
-  displayName  String
-  phoneNumber  String?
-  address      String?
-  country      String?
-  state        String?
-  city         String?
-  zipCode      String?
-  about        String?
-  perms        Permission[]
-  requests     Request[]
-  queuesOwned  Queue[]
+  id          String       @id @unique
+  email       String       @unique
+  displayName String
+  phoneNumber String?
+  address     String?
+  country     String?
+  state       String?
+  city        String?
+  zipCode     String?
+  about       String?
+  perms       Permission[]
+  requests    Request[]
 }
 
 model Course {
-  id           String     @id @unique
-  name         String
-  year         String
-  term         String
-  perms        Permission[]
+  id     String       @id @unique @default(uuid())
+  name   String
+  year   String
+  term   String
+  perms  Permission[]
+  queues Queue[]
 }
 
 model Permission {
-  id           String     @id @unique
-  course       Course     @relation(fields: [courseId], references: [id])
-  courseId     String
-  recipients   User       @relation(fields: [userId], references: [id])
-  userId       String
+  id        String @id @unique @default(uuid())
+  course    Course @relation(fields: [courseId], references: [id])
+  courseId  String
+  recipient User   @relation(fields: [userId], references: [id])
+  userId    String
+  role      Role   @default(STUDENT)
 }
 
 model Queue {
-  id           String     @id @unique
-  active       Boolean
-  name         String?
-  owner        User       @relation(fields: [ownerId], references: [id])
-  ownerId      String
-  studentId    String
-  requests     Request[]
+  id       String    @id @unique
+  active   Boolean   @default(false)
+  name     String?
+  course   Course    @relation(fields: [courseId], references: [id])
+  courseId String
+  requests Request[]
 }
 
 model Request {
-  id           String     @id @unique
-  info         String?
-  problemType  Int?
-  queue        Queue      @relation(fields: [queueId], references: [id])
-  queueId      String
-  users        User       @relation(fields: [userId], references: [id])
-  userId       String
+  id          String  @id @unique
+  info        String?
+  problemType Int?
+  queue       Queue   @relation(fields: [queueId], references: [id])
+  queueId     String
+  users       User    @relation(fields: [userId], references: [id])
+  userId      String
+}
+
+enum Role {
+  ADMIN
+  TA
+  STUDENT
 }

@@ -3,27 +3,29 @@ import { prisma } from 'lib/prisma';
 // utils
 import cors from 'src/utils/cors';
 
-async function registerNewUser(req: NextApiRequest, res: NextApiResponse) {
+async function createQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { userId, data } = req.body;
-    const { email, displayName } = data;
+    const { courseId, name } = data;
 
-    const user = await prisma.user.upsert({
-      where: {
-        email
-      },
-      update: {},
-      create: {
-        id: userId,
-        email,
-        displayName,
-      },
+    const course = await prisma.queue.create({
+      data: {
+        name: className,
+        year,
+        term: session,
+        perms: {
+          create: {
+            userId,
+            role: 'ADMIN'
+          }
+        }
+      }
     });
 
-    res.status(200).json({ user });
+    res.status(200).json({ course });
   } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Error creating user' });
+    console.error('Error creating course:', error);
+    res.status(500).json({ error: 'Error creating course' });
   }
 }
 
@@ -35,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case 'GET':
         break;
       case 'POST':
-        await registerNewUser(req, res);
+        await createCourse(req, res);
         break;
       case 'PUT':
         break;
