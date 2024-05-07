@@ -8,6 +8,7 @@ async function createCourse(req: NextApiRequest, res: NextApiResponse) {
     const { userId, data } = req.body;
     const { className, year, session } = data;
 
+
     const course = await prisma.course.create({
       data: {
         name: className,
