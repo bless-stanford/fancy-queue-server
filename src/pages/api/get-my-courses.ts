@@ -3,22 +3,30 @@ import { prisma } from 'lib/prisma';
 // utils
 import cors from 'src/utils/cors';
 
-async function createQueue(req: NextApiRequest, res: NextApiResponse) {
+async function getMyCourses(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { courseId, data } = req.body;
-    const { name } = data;
+    const { userId } = req.body;
 
-    const queue = await prisma.queue.create({
-      data: {
-        name,
-        courseId
+    const perms = await prisma.permission.findMany({
+      where: {
+        userId
       }
     });
 
-    res.status(200).json({ queue });
+    let courses = [];
+
+    for (const perm of perms) {
+      const course = await prisma.course.findFirst({
+        where: {
+          id: perm.courseId
+        }
+      });
+      courses.push(course);
+    }
+    res.status(200).json({ coursesFetched: courses, permsFetched: perms });
   } catch (error) {
-    console.error('Error creating queue:', error);
-    res.status(500).json({ error: 'Error creating queue' });
+    console.error('Error retrieving courses:', error);
+    res.status(500).json({ error: 'Error retrieving courses' });
   }
 }
 
@@ -28,9 +36,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (req.method) {
       case 'GET':
+        await getMyCourses(req, res);
         break;
       case 'POST':
-        await createQueue(req, res);
         break;
       case 'PUT':
         break;
