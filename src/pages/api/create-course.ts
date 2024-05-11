@@ -6,21 +6,21 @@ import cors from 'src/utils/cors';
 async function createCourse(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { userId, data } = req.body;
-    const { className, year, session } = data;
 
+    const { courseName, year, term } = data;
 
     const course = await prisma.course.create({
       data: {
-        name: className,
+        name: courseName,
         year,
-        term: session,
+        term,
         perms: {
           create: {
             userId,
-            role: 'ADMIN'
-          }
-        }
-      }
+            role: 'ADMIN',
+          },
+        },
+      },
     });
 
     res.status(200).json({ course });
@@ -35,16 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await cors(req, res);
 
     switch (req.method) {
-      case 'GET':
-        break;
       case 'POST':
         await createCourse(req, res);
-        break;
-      case 'PUT':
-        break;
-      case 'PATCH':
-        break;
-      case 'DELETE':
         break;
       default:
         res.status(405).json({
