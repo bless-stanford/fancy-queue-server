@@ -5,14 +5,36 @@ import cors from 'src/utils/cors';
 
 async function createQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { courseId, data } = req.body;
+    const { courseId, userEmail, data } = req.body;
     const { name } = data;
+
+    const queueOwner = await prisma.user.findFirst({
+      where: {
+        email: userEmail
+      }
+    });
+
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId
+      }
+    });
+
 
     const queue = await prisma.queue.create({
       data: {
         name,
-        courseId
-      }
+        course: {
+          connect: {
+            id: courseId
+          },
+        },
+        owner: {
+          connect: {
+            id: queueOwner?.id
+          },
+        },
+      },
     });
 
     res.status(200).json({ queue });

@@ -26,6 +26,7 @@ model User {
   about       String?
   perms       Permission[]
   requests    Request[]
+  queues      Queue[]
 }
 
 model Course {
@@ -53,6 +54,8 @@ model Queue {
   course   Course    @relation(fields: [courseId], references: [id])
   courseId String
   requests Request[]
+  owner    User      @relation(fields: [userId], references: [id])
+  userId   String
 }
 
 model Request {
@@ -61,7 +64,7 @@ model Request {
   problemType Int?
   queue       Queue   @relation(fields: [queueId], references: [id])
   queueId     String
-  users       User    @relation(fields: [userId], references: [id])
+  user        User    @relation(fields: [userId], references: [id])
   userId      String
 }
 
