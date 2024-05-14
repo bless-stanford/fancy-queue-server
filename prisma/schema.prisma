@@ -65,7 +65,7 @@ model Request {
   problemType Int?
   queue       Queue   @relation(fields: [queueId], references: [id])
   queueId     String
-  users       User    @relation(fields: [userId], references: [id])
+  user        User    @relation(fields: [userId], references: [id])
   userId      String
 }
 
