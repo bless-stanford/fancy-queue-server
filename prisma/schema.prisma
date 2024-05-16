@@ -49,14 +49,16 @@ model Permission {
 }
 
 model Queue {
-  id       String    @id @unique @default(uuid())
-  active   Boolean   @default(false)
-  name     String?
-  course   Course    @relation(fields: [courseId], references: [id])
-  courseId String
-  requests Request[]
-  owner    User      @relation(fields: [userId], references: [id])
-  userId   String
+  id        String    @id @unique @default(uuid())
+  course    Course    @relation(fields: [courseId], references: [id])
+  courseId  String
+  requests  Request[]
+  owner     User      @relation(fields: [userId], references: [id])
+  startTime DateTime
+  endTime   DateTime
+  recurring Boolean? @default(true)
+  userId    String
+  helpers   String[]
 }
 
 model Request {

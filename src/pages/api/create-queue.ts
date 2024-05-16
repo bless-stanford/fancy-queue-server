@@ -5,8 +5,12 @@ import cors from 'src/utils/cors';
 
 async function createQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { courseId, userEmail, data } = req.body;
-    const { name } = data;
+    const { courseId, data} = req.body;
+    const {userEmail, startTime, endTime, recurring, userId, helpers} = data;
+
+    if (recurring) {
+      // create many such queues, for each time. At most 16 weeks into the future.
+    }
 
     const queueOwner = await prisma.user.findFirst({
       where: {
@@ -23,7 +27,6 @@ async function createQueue(req: NextApiRequest, res: NextApiResponse) {
 
     const queue = await prisma.queue.create({
       data: {
-        name,
         course: {
           connect: {
             id: courseId
@@ -34,6 +37,10 @@ async function createQueue(req: NextApiRequest, res: NextApiResponse) {
             id: queueOwner?.id
           },
         },
+        userId,
+        startTime,
+        endTime,
+        helpers,
       },
     });
 
