@@ -30,7 +30,7 @@ model User {
 }
 
 model Course {
-  id     String       @id @unique @default(uuid())
+  id     String          @id @unique @default(uuid())
   name   String
   year   String
   term   String
@@ -49,22 +49,26 @@ model Permission {
 }
 
 model Queue {
-  id        String    @id @unique @default(uuid())
-  course    Course    @relation(fields: [courseId], references: [id])
-  courseId  String
-  requests  Request[]
-  owner     User      @relation(fields: [userId], references: [id])
-  startTime DateTime
-  endTime   DateTime
-  recurring Boolean? @default(true)
-  userId    String
-  helpers   String[]
+  id         String    @id @unique @default(uuid())
+  course     Course    @relation(fields: [courseId], references: [id])
+  courseId   String
+  courseCode String?
+  requests   Request[]
+  isOpen     Boolean   @default(false)
+  owner      User      @relation(fields: [userId], references: [id])
+  startTime  DateTime?
+  endTime    DateTime?
+  recurring  Boolean?  @default(true)
+  userId     String
+  helpers    String[]
 }
 
 model Request {
   id          String  @id @unique @default(uuid())
   info        String?
+  displayName String
   problemType Int?
+  timeJoined  DateTime @default(now())
   queue       Queue   @relation(fields: [queueId], references: [id])
   queueId     String
   user        User    @relation(fields: [userId], references: [id])
@@ -72,10 +76,10 @@ model Request {
 }
 
 model EnrollmentCode {
-  id          String    @id @unique
-  course      Course    @relation(fields: [courseId], references: [id])
-  courseId    String    @unique
-  expires     DateTime  
+  id       String   @id @unique
+  course   Course   @relation(fields: [courseId], references: [id])
+  courseId String   @unique
+  expires  DateTime
 }
 
 enum Role {
