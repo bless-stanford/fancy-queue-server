@@ -89,7 +89,7 @@ async function getHelperQueues(req: NextApiRequest, res: NextApiResponse) {
         },
       },
     });
-    
+
     res.status(200).json(queues); // Responding with the fetched queues
   } catch (error) {
     console.error('Error fetching queues:', error);
@@ -97,6 +97,7 @@ async function getHelperQueues(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
+// not sure if getCourseQueues does the same thing as getQueues.
 async function getCourseQueues(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { userId, courseId } = req.query;
