@@ -14,7 +14,7 @@ async function createCourse(req: NextApiRequest, res: NextApiResponse) {
         name: courseName,
         year,
         term,
-        perms: {
+        permissions: {
           create: {
             userId,
             role: 'ADMIN',
@@ -32,21 +32,6 @@ async function createCourse(req: NextApiRequest, res: NextApiResponse) {
 
 // ----------------------------------------------------------------------------
 
-async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
-  try {
-    const { userId, courseId, courseCode } = req.body;
-
-    if (!userId || !courseId || !courseCode) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    return res.status(200).json({ userId, courseId, courseCode });
-  } catch (error) {
-    console.error('Error creating course:', error);
-    return res.status(500).json({ error: 'Error creating course' });
-  }
-}
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     await cors(req, res);
@@ -55,7 +40,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (req.method) {
       case 'POST':
-        if (endpoint === 'join-queue') await joinQueue(req, res);
         if (endpoint === 'create-course') await createCourse(req, res);
         break;
       default:

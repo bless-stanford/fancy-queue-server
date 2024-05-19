@@ -24,28 +24,31 @@ model User {
   city        String?
   zipCode     String?
   about       String?
-  perms       Permission[]
+  permissions Permission[]
   requests    Request[]
   queues      Queue[]
 }
 
 model Course {
-  id     String          @id @unique @default(uuid())
-  name   String
-  year   String
-  term   String
-  perms  Permission[]
-  queues Queue[]
-  erc    EnrollmentCode?
+  id          String          @id @unique @default(uuid())
+  name        String
+  year        String
+  term        String
+  title       String?
+  permissions Permission[]
+  queues      Queue[]
+  erc         EnrollmentCode?
 }
 
 model Permission {
-  id        String @id @unique @default(uuid())
-  course    Course @relation(fields: [courseId], references: [id])
-  courseId  String
-  recipient User   @relation(fields: [userId], references: [id])
-  userId    String
-  role      Role   @default(STUDENT)
+  id       String @id @unique @default(uuid())
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId String
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String
+  role     Role   @default(STUDENT)
+
+  @@unique([userId, courseId])
 }
 
 model Queue {
@@ -64,14 +67,14 @@ model Queue {
 }
 
 model Request {
-  id          String  @id @unique @default(uuid())
+  id          String   @id @unique @default(uuid())
   info        String?
   displayName String
   problemType Int?
   timeJoined  DateTime @default(now())
-  queue       Queue   @relation(fields: [queueId], references: [id])
+  queue       Queue    @relation(fields: [queueId], references: [id])
   queueId     String
-  user        User    @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
   userId      String
 }
 
