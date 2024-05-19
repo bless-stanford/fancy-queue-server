@@ -28,10 +28,9 @@ async function getCourses(req: NextApiRequest, res: NextApiResponse) {
 
 // ----------------------------------------------------------------------------------
 async function getHelperQueues(req: NextApiRequest, res: NextApiResponse) {
-  const { userId, courseId } = req.body;
+  const { userId, courseId } = req.query;
 
   if (!userId || !courseId) {
-    // Ensuring both userId and courseId are provided
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
@@ -48,26 +47,26 @@ async function getHelperQueues(req: NextApiRequest, res: NextApiResponse) {
       include: {
         requests: {
           include: {
-            user: true, 
+            user: true,
           },
         },
       },
     });
 
-    res.status(200).json(queues); // Responding with the fetched queues
+    return res.status(200).json({ queues });
   } catch (error) {
     console.error('Error fetching queues:', error);
-    res.status(500).json({ error: 'An error occurred while fetching queues' });
+    return res.status(500).json({ error: 'An error occurred while fetching queues' });
   }
 }
 
-// not sure if getCourseQueues does the same thing as getQueues.
+// ----------------------------------------------------------------------------------
+
 async function getCourseQueues(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { userId, courseId } = req.query;
 
     if (!userId || !courseId) {
-      // will use userId to get queues later on - for now, just get all queues for testing
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -91,7 +90,6 @@ async function getCourseQueues(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-
 // ----------------------------------------------------------------------------------
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -112,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
     }
   } catch (error) {
-    console.error('[GET API]: ', error);
+    console.error('[GET DATA API]: ', error);
     res.status(500).json({
       message: 'Internal server error',
     });
