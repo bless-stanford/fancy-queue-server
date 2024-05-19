@@ -11,12 +11,16 @@ async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    console.log(req.body);
+
     const queue = await prisma.queue.findFirst({
       where: {
         id: queueId as string,
       },
     });
 
+    console.log(queue);
+    
     if (!queue) {
       return res.status(404).json({ error: 'Queue not found' });
     }

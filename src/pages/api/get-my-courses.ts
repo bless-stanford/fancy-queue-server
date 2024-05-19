@@ -21,9 +21,9 @@ async function getMyCourses(req: NextApiRequest, res: NextApiResponse) {
           id: perm.courseId
         }
       });
-      courses.push(course);
+      courses.push({... course, role: perm.role.toLowerCase()});
     }
-    res.status(200).json({ coursesFetched: courses, permsFetched: perms });
+    res.status(200).json({ coursesFetched: courses });
   } catch (error) {
     console.error('Error retrieving courses:', error);
     res.status(500).json({ error: 'Error retrieving courses' });
