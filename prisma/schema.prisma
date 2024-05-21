@@ -29,26 +29,26 @@ model User {
   queues      Queue[]
 }
 
-model Course {
-  id          String          @id @unique @default(uuid())
-  name        String
-  year        String
-  term        String
-  title       String?
-  permissions Permission[]
-  queues      Queue[]
-  erc         EnrollmentCode?
-}
-
 model Permission {
-  id       String @id @unique @default(uuid())
-  course   Course @relation(fields: [courseId], references: [id])
-  courseId String
-  user     User   @relation(fields: [userId], references: [id])
-  userId   String
-  role     Role   @default(STUDENT)
+  id       String  @id @unique @default(uuid())
+  course   Course  @relation(fields: [courseId], references: [id])
+  courseId String  
+  user     User    @relation(fields: [userId], references: [id])
+  userId   String  
+  role     Role    @default(STUDENT)
 
   @@unique([userId, courseId])
+}
+
+model Course {
+  id            String          @id @unique @default(uuid())
+  name          String
+  year          String
+  term          String
+  title         String?
+  queues        Queue[]
+  erc           EnrollmentCode?
+  permissions   Permission[]
 }
 
 model Queue {

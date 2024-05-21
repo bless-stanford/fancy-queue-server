@@ -6,7 +6,7 @@ import cors from 'src/utils/cors';
 async function createQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { courseId, data} = req.body;
-    const {userEmail, startTime, endTime, recurring, userId, helpers} = data;
+    const {userEmail, startTime, endTime, recurring, helpers} = data;
 
     if (recurring) {
       // create many such queues, for each time. At most 16 weeks into the future.
@@ -37,7 +37,6 @@ async function createQueue(req: NextApiRequest, res: NextApiResponse) {
             id: queueOwner?.id
           },
         },
-        userId,
         startTime,
         endTime,
         helpers,

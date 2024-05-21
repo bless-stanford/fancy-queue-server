@@ -18,7 +18,7 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.13.5",
-    "@prisma/client": "^5.12.1",
+    "@prisma/client": "^5.14.0",
     "@types/ws": "^8.5.10",
     "cors": "^2.8.5",
     "date-fns": "^2.30.0",
@@ -56,7 +56,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "prettier": "^2.8.8",
-    "prisma": "^5.13.0",
+    "prisma": "^5.14.0",
     "typescript": "^5.4.5"
   }
 }
