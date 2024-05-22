@@ -34,7 +34,7 @@ async function getHelperQueues(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  console.log(req);
+  console.log(userId, courseId);
 
   try {
     const queues = await prisma.queue.findMany({
@@ -92,6 +92,39 @@ async function getCourseQueues(req: NextApiRequest, res: NextApiResponse) {
 
 // ----------------------------------------------------------------------------------
 
+async function getHelpers(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { courseId } = req.query;
+
+    if (!courseId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const permissions = await prisma.permission.findMany({
+      where: {
+        courseId: courseId as string,
+        role: 'HELPER',
+      },
+      include: {
+          user:true
+      }
+    });
+
+    const helpers = permissions.map(permission => ({
+      displayName: permission.user.displayName,
+      email: permission.user.email,
+    }));
+
+    return res.status(200).json({ helpers });
+  } catch (error) {
+    console.error('Error getting queues:', error);
+    return res.status(500).json({ error: 'Error getting queues' });
+  }
+}
+
+
+// ----------------------------------------------------------------------------------
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     await cors(req, res);
@@ -103,6 +136,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (endpoint === 'get-courses') await getCourses(req, res);
         if (endpoint === 'get-course-queues') await getCourseQueues(req, res);
         if (endpoint === 'get-helper-queues') await getHelperQueues(req, res);
+        if (endpoint === 'get-helpers') await getHelpers(req, res);
         break;
       default:
         res.status(405).json({

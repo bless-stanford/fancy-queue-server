@@ -3,6 +3,49 @@ import { prisma } from 'lib/prisma';
 // utils
 import cors from 'src/utils/cors';
 
+async function createQueue(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { courseId, data} = req.body;
+    const {email, startTime, endTime, recurring, helpers} = data;
+    
+    console.log(data);
+
+    if (recurring) {
+      // create many such queues, for each time. At most 16 weeks into the future.
+    }
+
+    const queueOwner = await prisma.user.findFirst({
+      where: {
+        email: email
+      }
+    });
+
+    const queue = await prisma.queue.create({
+      data: {
+        course: {
+          connect: {
+            id: courseId
+          },
+        },
+        owner: {
+          connect: {
+            id: queueOwner?.id
+          },
+        },
+        startTime,
+        endTime,
+        helpers: (helpers + ',' + email).split(","),
+      },
+    });
+
+    res.status(200).json({ queue });
+  } catch (error) {
+    console.error('Error creating queue:', error);
+    res.status(500).json({ error: 'Error creating queue' });
+  }
+}
+
+
 async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { userId, queueId, displayName } = req.body;
@@ -102,6 +145,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (req.method) {
       case 'POST':
+        if (endpoint === 'create-queue') await createQueue(req, res);
         if (endpoint === 'join-queue') await joinQueue(req, res);
         if (endpoint === 'leave-queue') await leaveQueue(req, res);
         break;
