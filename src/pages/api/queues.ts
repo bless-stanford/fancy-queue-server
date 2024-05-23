@@ -50,6 +50,8 @@ async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { userId, queueId, displayName } = req.body;
 
+    console.log(userId, queueId, displayName);
+
     if (!userId || !queueId || !displayName) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -137,6 +139,69 @@ async function leaveQueue(req: NextApiRequest, res: NextApiResponse) {
 
 // ----------------------------------------------------------------------------------
 
+// should probably call this open queue so with some check (eg, if already open throw error.)
+async function toggleQueue(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { userId, queueId } = req.body;
+
+    if (!userId || !queueId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const queue = await prisma.queue.findUnique({
+      where: { id: queueId },
+    });
+
+    if (!queue) {
+      return res.status(404).json({ error: 'Queue not found' });
+    }
+
+    // Update the queue to open
+    await prisma.queue.update({
+      where: { id: queueId },
+      data: { isOpen: !queue.isOpen },
+    });
+
+    return res.status(200).json({ message: 'Successfully opened the queue' });
+  } catch (error) {
+    console.error('Error leaving queue:', error);
+    return res.status(500).json({ error: 'Error leaving queue' });
+  }
+}
+
+// ----------------------------------------------------------------------------------
+
+async function closeQueue(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { userId, queueId } = req.body;
+
+    if (!userId || !queueId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const queue = await prisma.queue.findUnique({
+      where: { id: queueId },
+    });
+
+    if (!queue) {
+      return res.status(404).json({ error: 'Queue not found' });
+    }
+
+    // Update the queue to open
+    await prisma.queue.update({
+      where: { id: queueId },
+      data: { isOpen: false },
+    });
+
+    return res.status(200).json({ message: 'Successfully opened the queue' });
+  } catch (error) {
+    console.error('Error leaving queue:', error);
+    return res.status(500).json({ error: 'Error leaving queue' });
+  }
+}
+
+// ----------------------------------------------------------------------------------
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     await cors(req, res);
@@ -148,6 +213,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (endpoint === 'create-queue') await createQueue(req, res);
         if (endpoint === 'join-queue') await joinQueue(req, res);
         if (endpoint === 'leave-queue') await leaveQueue(req, res);
+        if (endpoint === 'toggle-queue') await toggleQueue(req, res);
         break;
       default:
         res.status(405).json({
