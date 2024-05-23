@@ -16,14 +16,16 @@ async function createCourse(req: NextApiRequest, res: NextApiResponse) {
         name: courseName,
         year,
         term,
-        permissions: {
-          create: {
-            userId,
-            role: 'ADMIN',
-          },
-        },
       },
     });
+
+    await prisma.permission.create({
+      data: {
+        courseId: course.id,
+        userId,
+        role: 'ADMIN',
+      }
+    })
 
     const helperEmails: string[] = helpers.split(',')
                                       .map((helper: string) => helper.trim());

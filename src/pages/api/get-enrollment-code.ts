@@ -4,10 +4,23 @@ import { prisma } from 'lib/prisma';
 import cors from 'src/utils/cors';
 import random from 'random'
 
-async function issueErc(req: NextApiRequest, res: NextApiResponse) {
+async function getErc(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { courseId, data } = req.body;
     const { expires } = data;
+
+    const hasOne = await prisma.enrollmentCode.findFirst({
+      where: {
+        courseId
+      }
+    });
+
+    if (hasOne !== null) {
+      res.status(200).json({erc: hasOne});
+        return; // unclear if necessary?
+    }
+
+    console.log(hasOne);
 
     let retries = 3;
     while (retries != 0) {
@@ -46,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     switch (req.method) {
 
       case 'POST':
-        await issueErc(req, res);
+        await getErc(req, res);
         break;
       default:
         res.status(405).json({
