@@ -61,7 +61,6 @@ model Queue {
   owner      User      @relation(fields: [userId], references: [id])
   startTime  DateTime?
   endTime    DateTime?
-  recurring  Boolean?  @default(true)
   userId     String
   helpers    String[]
 }

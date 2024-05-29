@@ -1,44 +1,69 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+// Extend dayjs with plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault("America/Los_Angeles");
+
 import { prisma } from 'lib/prisma';
 // utils
 import cors from 'src/utils/cors';
 
 async function createQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { courseId, data} = req.body;
-    const {email, startTime, endTime, recurring, helpers} = data;
-    
-    console.log(data);
+    const { courseId, data } = req.body;
+    const { email, numberOfWeeks, day, startTime, endTime, helpers } = data;
 
-    if (recurring) {
-      // create many such queues, for each time. At most 16 weeks into the future.
-    }
+    const startTimeParsed = dayjs(startTime, 'HH:mm');
+    const endTimeParsed = dayjs(endTime, 'HH:mm');
+
+    // Combine day with startTime and endTime
+    const combineDateAndTime = (date: string, timeParsed: dayjs.Dayjs) =>
+      dayjs(date).hour(timeParsed.hour()).minute(timeParsed.minute()).second(0);
+
+    const initialStartDateTime = combineDateAndTime(day, startTimeParsed);
+    const initialEndDateTime = combineDateAndTime(day, endTimeParsed);
 
     const queueOwner = await prisma.user.findFirst({
       where: {
-        email: email
-      }
-    });
-
-    const queue = await prisma.queue.create({
-      data: {
-        course: {
-          connect: {
-            id: courseId
-          },
-        },
-        owner: {
-          connect: {
-            id: queueOwner?.id
-          },
-        },
-        startTime,
-        endTime,
-        helpers: (helpers + ',' + email).split(","),
+        email: email,
       },
     });
 
-    res.status(200).json({ queue });
+    if (!queueOwner) {
+      throw new Error('Queue owner not found');
+    }
+
+    const createQueueForDate = async (startDateTime: dayjs.Dayjs, endDateTime: dayjs.Dayjs) => {
+      return await prisma.queue.create({
+        data: {
+          course: {
+            connect: {
+              id: courseId,
+            },
+          },
+          owner: {
+            connect: {
+              id: queueOwner.id,
+            },
+          },
+          startTime: startDateTime.format('YYYY-MM-DDTHH:mm:ssZ'),
+          endTime: endDateTime.format('YYYY-MM-DDTHH:mm:ssZ'),
+          helpers: (helpers + ',' + email).split(',').filter((name) => name !== ''),
+        },
+      });
+    };
+
+    for (let i = 0; i < numberOfWeeks; i++) {
+      const startDateTime = initialStartDateTime.add(i, 'week');
+      const endDateTime = initialEndDateTime.add(i, 'week');
+      await createQueueForDate(startDateTime, endDateTime);
+    }
+
+    res.status(200).json({ message: 'Queue(s) created successfully' });
   } catch (error) {
     console.error('Error creating queue:', error);
     res.status(500).json({ error: 'Error creating queue' });
@@ -49,8 +74,6 @@ async function createQueue(req: NextApiRequest, res: NextApiResponse) {
 async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { userId, queueId, displayName } = req.body;
-
-    console.log(userId, queueId, displayName);
 
     if (!userId || !queueId || !displayName) {
       return res.status(400).json({ error: 'Missing required fields' });
