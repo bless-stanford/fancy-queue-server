@@ -24,6 +24,7 @@ model User {
   city        String?
   zipCode     String?
   about       String?
+  specialty   String?
   permissions Permission[]
   requests    Request[]
   queues      Queue[]
