@@ -26,8 +26,9 @@ model User {
   about       String?
   specialty   String?
   permissions Permission[]
-  requests    Request[]
+  requests    Request[]   @relation("requester")
   queues      Queue[]
+  takenRequests Request[] @relation("TA")
 }
 
 model Permission {
@@ -72,10 +73,14 @@ model Request {
   displayName String
   problemType Int?
   timeJoined  DateTime @default(now())
+  timeTaken   DateTime?
+  timeClosed  DateTime?
   queue       Queue    @relation(fields: [queueId], references: [id])
   queueId     String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation("requester", fields: [userId], references: [id])
   userId      String
+  TA          User?     @relation("TA", fields: [TAId], references: [id])
+  TAId      String?
 }
 
 model EnrollmentCode {
