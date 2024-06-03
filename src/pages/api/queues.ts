@@ -4,9 +4,9 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 
 // Extend dayjs with plugins
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.tz.setDefault("America/Los_Angeles");
+// dayjs.extend(utc);
+// dayjs.extend(timezone);
+// dayjs.tz.setDefault("America/Los_Angeles");
 
 import { prisma } from 'lib/prisma';
 // utils
