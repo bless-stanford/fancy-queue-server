@@ -79,8 +79,8 @@ model Request {
   queueId     String
   user        User     @relation("requester", fields: [userId], references: [id])
   userId      String
-  TA          User?     @relation("TA", fields: [TAId], references: [id])
-  TAId      String?
+  helper      User?     @relation("TA", fields: [helperId], references: [id])
+  helperId    String?
 }
 
 model EnrollmentCode {

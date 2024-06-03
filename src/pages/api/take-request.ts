@@ -5,44 +5,24 @@ import cors from 'src/utils/cors';
 
 async function takeRequest(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { userId, data } = req.body;
-    const { code } = data;
+    const { data } = req.body;
+    const { requestId, helperId, timeTaken } = data;
 
-    const codeToCourse = await prisma.enrollmentCode.findFirst({
+    const reqUpdate = await prisma.request.update({
       where: {
-        id: code,
+        id: requestId
       },
-    });
-
-    if (codeToCourse === null) {
-      res.status(500).json({ error: 'Error joining course' });
-      return;
-    }
-
-    const alreadyJoined = await prisma.permission.findFirst({
-      where: {
-        courseId: codeToCourse.courseId,
-        userId,
-      },
-    });
-
-    if (alreadyJoined != null) {
-      res.status(500).json({ error: 'Error joining course' });
-      return;
-    }
-
-    const perm = await prisma.permission.create({
       data: {
-        courseId: codeToCourse.courseId,
-        userId,
-        role: 'STUDENT',
-      },
-    });
+        helperId,
+        timeTaken
+      }
+    })
+    
 
-    res.status(200).json({ perm });
+    res.status(200).json({ reqUpdate });
   } catch (error) {
-    console.error('Error joining course:', error);
-    res.status(500).json({ error: 'Error joining course' });
+    console.error('Error taking request:', error);
+    res.status(500).json({ error: 'Error taking request' });
   }
 }
 
