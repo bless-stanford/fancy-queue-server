@@ -34,7 +34,7 @@ async function getHelperQueues(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  console.log(userId, courseId);
+  console.log("Getting helper queues ....", req.query)
 
   try {
     const queues = await prisma.queue.findMany({

@@ -35,6 +35,7 @@ async function resolveRequest(req: NextApiRequest, res: NextApiResponse) {
       },
       data: {
         timeClosed,
+        status: "DONE",
       },
     });
 

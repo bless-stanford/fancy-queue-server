@@ -89,6 +89,9 @@ async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
       return res.status(404).json({ error: 'Queue not found' });
     }
 
+    // check if request is in the queue and it is already waiting. If so
+    // throw error.
+
     // Create a new request to join the queue
     const request = await prisma.request.create({
       data: {
@@ -108,7 +111,7 @@ async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
       },
     });
 
-    console.log('request:', request);
+    console.log("Created req: ", request);
 
     return res.status(200).json({ message: 'Successfully joined the queue', request });
   } catch (error) {
@@ -122,6 +125,7 @@ async function leaveQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { userId, queueId } = req.body;
 
+    console.log("About to leave", userId, queueId)
     if (!userId || !queueId) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -130,12 +134,17 @@ async function leaveQueue(req: NextApiRequest, res: NextApiResponse) {
       where: {
         userId: userId as string,
         queueId: queueId as string,
+        status: {
+          not: 'DONE',
+        },
       },
     });
 
     if (!request) {
       return res.status(404).json({ error: 'Request not found' });
     }
+
+    console.log("Req: ", request)
 
     // Update the request status to mark it as done
     await prisma.request.update({
@@ -148,6 +157,7 @@ async function leaveQueue(req: NextApiRequest, res: NextApiResponse) {
         timeClosed: new Date(),
       },
     });
+    console.log("Left Queue");
 
     return res.status(200).json({ message: 'Successfully marked the request as done' });
   } catch (error) {
