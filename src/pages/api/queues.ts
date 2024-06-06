@@ -205,13 +205,10 @@ async function toggleQueue(req: NextApiRequest, res: NextApiResponse) {
     const { userId, queueId, data} = req.body;
     const percentFilter = data
 
-    console.log(data);
-    console.log(userId);
     if (!userId || !queueId) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    console.log(queueId);
     const queue = await prisma.queue.findUnique({
       where: { id: queueId },
     });
@@ -249,9 +246,7 @@ async function toggleQueue(req: NextApiRequest, res: NextApiResponse) {
       }
 
       const n = percentFilter * totalReq
-      console.log(requestsList);
       let requests = getFirst(requestsList, n);
-      // potentially sort them here by timeJoined
 
       //get rid of everything in prisma from requests
       for (let i = 0; i < requests.length; i++) {
@@ -261,7 +256,6 @@ async function toggleQueue(req: NextApiRequest, res: NextApiResponse) {
             }
           });
       }
-      console.log(n);
 
       //distribute based on specialty
       queues.push(queue)
@@ -273,13 +267,10 @@ async function toggleQueue(req: NextApiRequest, res: NextApiResponse) {
             id: queues[i].userId
           }
         });
-
         // sort requests by specialty
         newReqs.push(requests.filter(removeReqsOfType(user?.specialty)));
       }
 
-      console.log("requests moving");
-      console.log(newReqs);
       // create new requests by specialty
       for (let i = 0; i < newReqs.length; i++) {
         for (let j = 0; j < newReqs[i].length; j++) {
@@ -304,13 +295,30 @@ async function toggleQueue(req: NextApiRequest, res: NextApiResponse) {
         }
       }
 
-      //add the leftovers balancing the remainders
+      //current state of the queues
+      const remainQueues = await prisma.queue.findMany({
+        where: {
+          courseId: queue.courseId,
+          isOpen: true
+        }
+      });
+      const remainReqs = []
+      for (let i = 0; i < remainQueues.length; i++) {
+        const requests = await prisma.request.findMany({
+          where: {
+            queueId: remainQueues[i].id
+          }
+        });
+        remainReqs.push(requests)
+      }
+      
+      //add the remainders balanced
       while (requests.length > 0) {
-        let smallest = 0;
+        let smallest = Number.MAX_SAFE_INTEGER;
         let index = 0;
-        for (let i = 0; i < newReqs.length; i++) {
-          if (newReqs[i].length < smallest) {
-            smallest = newReqs.length
+        for (let i = 0; i < remainReqs.length; i++) {
+          if (remainReqs[i].length < smallest) {
+            smallest = remainReqs[i].length
             index = i;
           }
         }
@@ -324,7 +332,7 @@ async function toggleQueue(req: NextApiRequest, res: NextApiResponse) {
             timeJoined: req.timeJoined,
             queue: {
               connect: {
-                id: queues[index].userId as string
+                id: queues[index].id as string
               },
             },
             user: {
@@ -334,7 +342,114 @@ async function toggleQueue(req: NextApiRequest, res: NextApiResponse) {
             },
           },
         });
-        newReqs[index].push(newreq)
+        remainReqs[index].push(newreq);
+      }
+    }
+
+    //do the opposite if we are closing the queue
+    //move all requests in the queue to other open ones
+    //prioritize specialty in the move, but after move freely
+    if (queues.length > 1 && queue.isOpen) {
+      const requests = await prisma.request.findMany({
+        where: {
+          queueId: queue.id
+        }
+      });
+
+      for (let i = 0; i < requests.length; i++) {
+        const deletedReq = await prisma.request.delete({
+          where: {
+            id: requests[i].id
+          }
+        });
+      }
+
+      //get the open queues newly
+      const queuesLeft = await prisma.queue.findMany({
+        where: {
+          courseId: queue.courseId,
+          isOpen: true
+        }
+      });
+
+      //distribute based on specialty
+      const newReqs = []
+      for (let i = 0; i < queuesLeft.length; i++) {
+        // get the owner of each queue
+        const user = await prisma.user.findFirst({
+          where: {
+            id: queuesLeft[i].userId
+          }
+        });
+        // sort requests by specialty
+        newReqs.push(requests.filter(removeReqsOfType(user?.specialty)));
+      }
+
+      // create new requests by specialty
+      for (let i = 0; i < newReqs.length; i++) {
+        for (let j = 0; j < newReqs[i].length; j++) {
+          const newreq  = await prisma.request.create({
+            data: {
+              info: newReqs[i][j].info,
+              displayName: newReqs[i][j].displayName,
+              problemType: newReqs[i][j].problemType,
+              timeJoined: newReqs[i][j].timeJoined,
+              queue: {
+                connect: {
+                  id: queuesLeft[i].id as string
+                },
+              },
+              user: {
+                connect: {
+                  id: newReqs[i][j].userId as string
+                },
+              },
+            },
+          });
+        }
+      }
+
+      const remainReqs = []
+      for (let i = 0; i < queuesLeft.length; i++) {
+        const requests = await prisma.request.findMany({
+          where: {
+            queueId: queuesLeft[i].id
+          }
+        });
+        remainReqs.push(requests);
+      }
+      
+      //add the remainders balanced
+      while (requests.length > 0) {
+        let smallest = Number.MAX_SAFE_INTEGER;
+        let index = 0;
+        for (let i = 0; i < remainReqs.length; i++) {
+          if (remainReqs[i].length < smallest) {
+            smallest = remainReqs[i].length
+            index = i;
+          }
+        }
+
+        const req = requests.pop();
+        const newreq  = await prisma.request.create({
+          data: {
+            info: req?.info,
+            displayName: req?.displayName ? req?.displayName : "",
+            problemType: req?.problemType,
+            timeJoined: req?.timeJoined,
+            queue: {
+              connect: {
+                id: queues[index].id as string
+              },
+            },
+            user: {
+              connect: {
+                id: req?.userId as string
+              },
+            },
+          },
+        });
+        remainReqs[index].push(newreq)
       }
     }
 
@@ -412,7 +527,6 @@ const concepts = ["Data Structure", "Algorithm", "Networking", "Systems", "Bug f
 for (let i = 0; i < 5; i++) {
   const user = await prisma.user.create({
     data: {
-      id: helpers[i], //this should probably have uuid default in schema
       email: helpers[i],
       displayName: names[i],
       specialty: i.toString(),
@@ -443,36 +557,56 @@ for (let i = 0; i < 5; i++) {
           },
         },
         helpers: [helpers[i]],
+        isOpen: true,
       },
     });
 
     //add 10 requests to it
-    for(let j = 0; j < 10; j++) {
+    for(let j = 0; j < 12; j++) {
       const student = await prisma.user.create({
         data: {
-          id: helpers[i].concat(j.toString()),
-          email: names[i].concat("-student-", j.toString(), "@stanford.edu"),
+          email: names[i].concat("-student-", (j+1).toString(), "@stanford.edu"),
           displayName: helpers[i].concat("'s #", (j+1).toString(), " student"),
         },
       });
 
       if(student) {
-        const probType = Math.floor(Math.random() * concepts.length);
-        const request = await prisma.request.create({
-          data: {
-            displayName: concepts[probType],
-            queue: {
-              connect: {
-                id: queue.id as string,
+        const probType = Math.floor(Math.random() * (concepts.length + 1)) - 1;
+        if (probType == -1) {
+          const request = await prisma.request.create({
+            data: {
+              displayName: "Misc",
+              queue: {
+                connect: {
+                  id: queue.id as string,
+                },
+              },
+              user: {
+                connect: {
+                  id: student.id as string,
+                },
               },
             },
-            user: {
-              connect: {
-                id: student.id as string,
+          });
+        } else {
+          const request = await prisma.request.create({
+            data: {
+              displayName: concepts[probType],
+              queue: {
+                connect: {
+                  id: queue.id as string,
+                },
               },
+              user: {
+                connect: {
+                  id: student.id as string,
+                },
+              },
+              problemType: probType,
             },
-          },
-        });
+          });
+        }
+        
       }
     }
 
