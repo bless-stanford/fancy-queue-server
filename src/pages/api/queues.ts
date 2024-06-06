@@ -52,7 +52,7 @@ async function createQueue(req: NextApiRequest, res: NextApiResponse) {
           },
           startTime: startDateTime.format('YYYY-MM-DDTHH:mm:ssZ'),
           endTime: endDateTime.format('YYYY-MM-DDTHH:mm:ssZ'),
-          helpers: (helpers + ',' + email).split(',').filter((name) => name !== ''),
+          helpers: (helpers + '\n' + email).split('\n').filter((name) => name !== ''),
         },
       });
     };
@@ -89,11 +89,12 @@ async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
       return res.status(404).json({ error: 'Queue not found' });
     }
 
-    // Check if the user has already joined the queue
+    // Check if the user is currently in the queue
     const existingRequest = await prisma.request.findFirst({
       where: {
         userId: userId as string,
         queueId: queueId as string,
+        timeClosed: null
       },
     });
 
