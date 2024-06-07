@@ -561,7 +561,7 @@ for (let i = 0; i < 5; i++) {
       },
     });
 
-    //add 10 requests to it
+    //add 12 requests to it
     for(let j = 0; j < 12; j++) {
       const student = await prisma.user.create({
         data: {
@@ -606,12 +606,8 @@ for (let i = 0; i < 5; i++) {
             },
           });
         }
-        
       }
     }
-
-
-
   }
 }
 
