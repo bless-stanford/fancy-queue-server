@@ -24,11 +24,10 @@ async function createCourse(req: NextApiRequest, res: NextApiResponse) {
         courseId: course.id,
         userId,
         role: 'ADMIN',
-      }
-    })
+      },
+    });
 
-    const helperEmails: string[] = helpers.split(',')
-                                      .map((helper: string) => helper.trim());
+    const helperEmails: string[] = helpers.split(',').map((helper: string) => helper.trim());
 
     for (const email of helperEmails) {
       const user = await prisma.user.findUnique({

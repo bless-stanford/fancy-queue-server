@@ -72,6 +72,8 @@ model Request {
   info        String?
   displayName String
   problemType Int?
+  status      RequestStatus @default(WAITING)
+  joined      Boolean  @default(false)
   timeJoined  DateTime @default(now())
   timeTaken   DateTime?
   timeClosed  DateTime?
@@ -94,4 +96,10 @@ enum Role {
   ADMIN
   HELPER
   STUDENT
+}
+
+enum RequestStatus {
+  WAITING
+  IN_PROGRESS
+  DONE
 }

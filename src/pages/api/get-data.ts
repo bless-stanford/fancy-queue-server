@@ -34,7 +34,7 @@ async function getHelperQueues(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  console.log(userId, courseId);
+  console.log("Getting helper queues ....", req.query)
 
   try {
     const queues = await prisma.queue.findMany({
@@ -46,6 +46,11 @@ async function getHelperQueues(req: NextApiRequest, res: NextApiResponse) {
       },
       include: {
         requests: {
+          where: {
+            status: {
+              not: 'DONE',
+            },
+          },
           include: {
             user: true,
           },
@@ -76,6 +81,11 @@ async function getCourseQueues(req: NextApiRequest, res: NextApiResponse) {
       },
       include: {
         requests: {
+          where: {
+            status: {
+              not: 'DONE',
+            },
+          },
           include: {
             user: true,
           },
@@ -106,11 +116,11 @@ async function getHelpers(req: NextApiRequest, res: NextApiResponse) {
         role: 'HELPER',
       },
       include: {
-          user:true
-      }
+        user: true,
+      },
     });
 
-    const helpers = permissions.map(permission => ({
+    const helpers = permissions.map((permission) => ({
       displayName: permission.user.displayName,
       email: permission.user.email,
     }));
@@ -121,7 +131,6 @@ async function getHelpers(req: NextApiRequest, res: NextApiResponse) {
     return res.status(500).json({ error: 'Error getting queues' });
   }
 }
-
 
 // ----------------------------------------------------------------------------------
 

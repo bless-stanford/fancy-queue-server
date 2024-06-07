@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
+// import utc from 'dayjs/plugin/utc';
+// import timezone from 'dayjs/plugin/timezone';
 
 // Extend dayjs with plugins
 // dayjs.extend(utc);
@@ -29,7 +29,7 @@ async function createQueue(req: NextApiRequest, res: NextApiResponse) {
 
     const queueOwner = await prisma.user.findFirst({
       where: {
-        email: email,
+        email,
       },
     });
 
@@ -37,8 +37,8 @@ async function createQueue(req: NextApiRequest, res: NextApiResponse) {
       throw new Error('Queue owner not found');
     }
 
-    const createQueueForDate = async (startDateTime: dayjs.Dayjs, endDateTime: dayjs.Dayjs) => {
-      return await prisma.queue.create({
+    const createQueueForDate = async (startDateTime: dayjs.Dayjs, endDateTime: dayjs.Dayjs) =>
+      prisma.queue.create({
         data: {
           course: {
             connect: {
@@ -55,11 +55,12 @@ async function createQueue(req: NextApiRequest, res: NextApiResponse) {
           helpers: (helpers + '\n' + email).split('\n').filter((name) => name !== ''),
         },
       });
-    };
 
+    // eslint-disable-next-line no-plusplus
     for (let i = 0; i < numberOfWeeks; i++) {
       const startDateTime = initialStartDateTime.add(i, 'week');
       const endDateTime = initialEndDateTime.add(i, 'week');
+      // eslint-disable-next-line no-await-in-loop
       await createQueueForDate(startDateTime, endDateTime);
     }
 
@@ -69,7 +70,6 @@ async function createQueue(req: NextApiRequest, res: NextApiResponse) {
     res.status(500).json({ error: 'Error creating queue' });
   }
 }
-
 
 async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -106,6 +106,8 @@ async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
     const request = await prisma.request.create({
       data: {
         displayName,
+        joined: true,
+        status: 'WAITING',
         queue: {
           connect: {
             id: queueId as string,
@@ -119,6 +121,8 @@ async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
       },
     });
 
+    console.log("Created req: ", request);
+
     return res.status(200).json({ message: 'Successfully joined the queue', request });
   } catch (error) {
     console.error('Error joining queue:', error);
@@ -127,11 +131,11 @@ async function joinQueue(req: NextApiRequest, res: NextApiResponse) {
 }
 
 // ----------------------------------------------------------------------------------
-
 async function leaveQueue(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { userId, queueId } = req.body;
 
+    console.log("About to leave", userId, queueId)
     if (!userId || !queueId) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -140,6 +144,9 @@ async function leaveQueue(req: NextApiRequest, res: NextApiResponse) {
       where: {
         userId: userId as string,
         queueId: queueId as string,
+        status: {
+          not: 'DONE',
+        },
       },
     });
 
@@ -147,17 +154,25 @@ async function leaveQueue(req: NextApiRequest, res: NextApiResponse) {
       return res.status(404).json({ error: 'Request not found' });
     }
 
-    // Delete the request to leave the queue
-    await prisma.request.delete({
+    console.log("Req: ", request)
+
+    // Update the request status to mark it as done
+    await prisma.request.update({
       where: {
         id: request.id,
       },
+      data: {
+        joined: false,
+        status: 'DONE',
+        timeClosed: new Date(),
+      },
     });
+    console.log("Left Queue");
 
-    return res.status(200).json({ message: 'Successfully left the queue' });
+    return res.status(200).json({ message: 'Successfully marked the request as done' });
   } catch (error) {
-    console.error('Error leaving queue:', error);
-    return res.status(500).json({ error: 'Error leaving queue' });
+    console.error('Error marking request as done:', error);
+    return res.status(500).json({ error: 'Error marking request as done' });
   }
 }
 
@@ -238,6 +253,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (endpoint === 'join-queue') await joinQueue(req, res);
         if (endpoint === 'leave-queue') await leaveQueue(req, res);
         if (endpoint === 'toggle-queue') await toggleQueue(req, res);
+        if (endpoint === 'close-queue') await closeQueue(req, res);
         break;
       default:
         res.status(405).json({

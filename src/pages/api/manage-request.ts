@@ -9,14 +9,14 @@ async function takeRequest(req: NextApiRequest, res: NextApiResponse) {
 
     const reqUpdate = await prisma.request.update({
       where: {
-        id: requestId
+        id: requestId,
       },
       data: {
         helperId,
-        timeTaken
-      }
-    })
-    
+        timeTaken,
+        status: 'IN_PROGRESS',
+      },
+    });
 
     res.status(200).json({ reqUpdate });
   } catch (error) {
@@ -31,13 +31,13 @@ async function resolveRequest(req: NextApiRequest, res: NextApiResponse) {
 
     const reqUpdate = await prisma.request.update({
       where: {
-        id: requestId
+        id: requestId,
       },
       data: {
-        timeClosed
-      }
-    })
-    
+        timeClosed,
+        status: "DONE",
+      },
+    });
 
     res.status(200).json({ reqUpdate });
   } catch (error) {
