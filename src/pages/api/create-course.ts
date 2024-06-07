@@ -19,6 +19,14 @@ async function createCourse(req: NextApiRequest, res: NextApiResponse) {
       },
     });
 
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    })
+
+    console.log(user);
+
     await prisma.permission.create({
       data: {
         courseId: course.id,
@@ -27,7 +35,7 @@ async function createCourse(req: NextApiRequest, res: NextApiResponse) {
       },
     });
 
-    const helperEmails: string[] = helpers.split(',').map((helper: string) => helper.trim());
+    const helperEmails: string[] = helpers?.split(',').map((helper: string) => helper.trim()) ?? [];
 
     for (const email of helperEmails) {
       const user = await prisma.user.findUnique({
