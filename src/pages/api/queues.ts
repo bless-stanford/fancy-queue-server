@@ -231,6 +231,118 @@ async function closeQueue(req: NextApiRequest, res: NextApiResponse) {
 
 // ----------------------------------------------------------------------------------
 
+async function testHarness(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+//dummy course
+const course = await prisma.course.create({
+  data: {
+    name: "CS 101",
+    year: "2024",
+    term: "Spring",
+  },
+});
+
+//its owner
+await prisma.permission.create({
+  data: {
+    courseId: course.id,
+    userId: userId as string,
+    role: 'ADMIN',
+  }
+})
+
+const helpers = ["alice@stanford.edu", "bob@stanford.edu", "carol@stanford.edu", "dave@stanford.edu", "erin@stanford.edu"];
+const names = ["Alice", "Bob", "Carol", "Dave", "Erin"];
+const concepts = ["Data Structure", "Algorithm", "Networking", "Systems", "Bug fix"];
+
+
+//add 5 helpers
+for (let i = 0; i < 5; i++) {
+  const user = await prisma.user.create({
+    data: {
+      id: helpers[i], //this should probably have uuid default in schema
+      email: helpers[i],
+      displayName: names[i],
+      specialty: i.toString(),
+    },
+  });
+
+  //helper perms
+  if (user) {
+    await prisma.permission.create({
+      data: {
+        userId: user.id,
+        role: 'HELPER',
+        courseId: course.id,
+      },
+    });
+
+    //create the queue
+    const queue = await prisma.queue.create({
+      data: {
+        course: {
+          connect: {
+            id: course.id,
+          },
+        },
+        owner: {
+          connect: {
+            id: user.id,
+          },
+        },
+        helpers: [helpers[i]],
+      },
+    });
+
+    //add 10 requests to it
+    for(let j = 0; j < 10; j++) {
+      const student = await prisma.user.create({
+        data: {
+          id: helpers[i].concat(j.toString()),
+          email: names[i].concat("-student-", j.toString(), "@stanford.edu"),
+          displayName: helpers[i].concat("'s #", (j+1).toString(), " student"),
+        },
+      });
+
+      if(student) {
+        const probType = Math.floor(Math.random() * concepts.length);
+        const request = await prisma.request.create({
+          data: {
+            displayName: concepts[probType],
+            queue: {
+              connect: {
+                id: queue.id as string,
+              },
+            },
+            user: {
+              connect: {
+                id: student.id as string,
+              },
+            },
+          },
+        });
+      }
+    }
+
+
+
+  }
+}
+
+    return res.status(200).json({ course });
+  } catch (error) {
+    console.error('Error generating harness:', error);
+    return res.status(500).json({ error: 'Error generating harness' });
+  }
+}
+
+// ----------------------------------------------------------------------------------
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     await cors(req, res);
@@ -244,6 +356,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (endpoint === 'leave-queue') await leaveQueue(req, res);
         if (endpoint === 'toggle-queue') await toggleQueue(req, res);
         if (endpoint === 'close-queue') await closeQueue(req, res);
+        if (endpoint === 'test-harness') await testHarness(req, res);
         break;
       default:
         res.status(405).json({
