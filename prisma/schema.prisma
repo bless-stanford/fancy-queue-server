@@ -43,7 +43,7 @@ model Permission {
 }
 
 model Course {
-  id            String          @id @unique @default(uuid())
+  id            String          @id @unique
   name          String
   year          String
   term          String
