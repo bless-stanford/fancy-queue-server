@@ -38,21 +38,23 @@ async function createCourse(req: NextApiRequest, res: NextApiResponse) {
 
     const helperEmails: string[] = helpers?.split(',').map((helper: string) => helper.trim()) ?? [];
 
-    for (const email of helperEmails) {
-      const user = await prisma.user.findUnique({
-        where: { email },
-      });
-
-      if (user) {
-        await prisma.permission.create({
-          data: {
-            userId: user.id,
-            role: 'HELPER',
-            courseId: course.id,
-          },
+    await Promise.all(
+      helperEmails.map(async (email) => {
+        const user = await prisma.user.findUnique({
+          where: { email },
         });
-      }
-    }
+
+        if (user) {
+          await prisma.permission.create({
+            data: {
+              userId: user.id,
+              role: 'HELPER',
+              courseId: course.id,
+            },
+          });
+        }
+      })
+    );
 
     res.status(200).json({ course });
   } catch (error) {
